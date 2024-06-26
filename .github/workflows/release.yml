@@ -1,0 +1,88 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Extract version number
+        id: extract_version
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            VERSION=${GITHUB_REF/refs\/tags\/v/}
+          else
+            VERSION="0.0.0"
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Update version in .csproj
+        run: |
+          VERSION=${{ steps.extract_version.outputs.VERSION }}
+          sed -i "s|<Version>.*</Version>|<Version>${VERSION}</Version>|" WhoIsChecker/WhoIsChecker.csproj
+        shell: bash
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build the project
+        run: dotnet build --configuration Release
+
+      - name: Create ZIP file
+        run: |
+          mkdir release
+          cp -r bin/Release/netstandard2.1/* release/
+          cd release
+          zip ../WhoIsChecker-${{ steps.extract_version.outputs.VERSION }}.zip *
+        shell: bash
+
+      - name: Upload release asset
+        uses: actions/upload-artifact@v4
+        with:
+          name: WhoIsChecker-${{ steps.extract_version.outputs.VERSION }}
+          path: WhoIsChecker-${{ steps.extract_version.outputs.VERSION }}.zip
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download release asset
+        uses: actions/download-artifact@v4
+        with:
+          name: WhoIsChecker-${{ needs.build.steps.extract_version.outputs.VERSION }}
+          path: .
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ needs.build.steps.extract_version.outputs.VERSION }}
+          release_name: Release v${{ needs.build.steps.extract_version.outputs.VERSION }}
+          body: |
+            Release notes for v${{ needs.build.steps.extract_version.outputs.VERSION }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./WhoIsChecker-${{ needs.build.steps.extract_version.outputs.VERSION }}.zip
+          asset_name: WhoIsChecker-${{ needs.build.steps.extract_version.outputs.VERSION }}.zip
+          asset_content_type: application/zip
