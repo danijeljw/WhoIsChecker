@@ -1,0 +1,43 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PackageId>WhoIsChecker</PackageId>
+    <Version>1.0.3</Version>
+    <Authors>danijeljw</Authors>
+    <Company>danijeljw</Company>
+    <Description>A library for checking WHOIS information of domains</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/danijeljw/WhoIsChecker</PackageProjectUrl>
+    <PackageIcon>icon.png</PackageIcon>
+    <ReadMe>README.md</ReadMe>
+    <RepositoryUrl>https://github.com/danijeljw/WhoIsChecker</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>whois;domain;check</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+    <DebugType>none</DebugType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <DebugType>none</DebugType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Text.Encodings.Web" Version="8.0.0" />
+    <PackageReference Include="System.Text.Json" Version="8.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Update="icon.png">
+      <Pack>true</Pack>
+      <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
+
+</Project>
