@@ -4,40 +4,47 @@ on:
   push:
     tags:
       - 'v*.*.*'
-  workflow_dispatch:
+  workflow_dispatch: # This allows the workflow to be triggered manually
 
 jobs:
   publish:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 8.0.x
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '6.0.x'
 
-    - name: Extract version number
-      id: extract_version
-      run: echo "::set-output name=VERSION::${GITHUB_REF/refs\/tags\/v/}"
+      - name: Extract version number
+        id: extract_version
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            VERSION=${GITHUB_REF/refs\/tags\/v/}
+          else
+            VERSION="0.0.0"
+          fi
+          echo "::set-output name=VERSION::$VERSION"
 
-    - name: Update version in .csproj
-      run: |
-        VERSION=${{ steps.extract_version.outputs.VERSION }}
-        sed -i "s|<Version>.*</Version>|<Version>${VERSION}</Version>|" WhoIsChecker.csproj
-      shell: bash
+      - name: Update version in .csproj
+        run: |
+          VERSION=${{ steps.extract_version.outputs.VERSION }}
+          sed -i "s|<Version>.*</Version>|<Version>${VERSION}</Version>|" WhoIsChecker/WhoIsChecker.csproj
+        shell: bash
 
-    - name: Restore dependencies
-      run: dotnet restore
+      - name: Restore dependencies
+        run: dotnet restore
 
-    - name: Build the project
-      run: dotnet build --configuration Release
+      - name: Build the project
+        run: dotnet build --configuration Release
 
-    - name: Pack the project
-      run: dotnet pack --configuration Release
+      - name: Pack the project
+        run: dotnet pack --configuration Release
 
-    # - name: Publish to NuGet
-    #   env:
-    #     NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
-    #   run: dotnet nuget push bin/Release/*.nupkg --api-key $NUGET_API_KEY --source https://api.nuget.org/v3/index.json
+      # - name: Publish to NuGet
+      #   env:
+      #     NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+      #   run: dotnet nuget push bin/Release/*.nupkg --api-key $NUGET_API_KEY --source https://api.nuget.org/v3/index.json
