@@ -32,7 +32,7 @@ jobs:
       - name: Update version in .csproj
         run: |
           VERSION=${{ steps.extract_version.outputs.VERSION }}
-          sed -i "s|<Version>.*</Version>|<Version>${VERSION}</Version>|" WhoIsChecker/WhoIsChecker.csproj
+          sed -i "s|<Version>.*</Version>|<Version>${VERSION}</Version>|" WhoIsChecker.csproj
         shell: bash
 
       - name: Restore dependencies
