@@ -27,7 +27,7 @@ jobs:
           else
             VERSION="0.0.0"
           fi
-          echo "::set-output name=VERSION::$VERSION"
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Update version in .csproj
         run: |
